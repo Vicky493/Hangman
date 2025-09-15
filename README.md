@@ -4,7 +4,7 @@
 A tech-themed Hangman game built in Python for Hack Club! Guess letters to reveal words like "algorithm" or "quantum" before the hangman is complete. Features cool ASCII art, input validation, and a replayable design.
 
 ## Play Online
-- Play now: [Click here to play on Replit](https://replit.com/@1vi2kto4ria/Python#hangman.py) 🚀
+- Play now: [Click here to play on Replit](https://replit.com/@1vi2kto4ria/Python) 🚀
 - How to play:
   1. Open the link and click the green "Run" button.
   2. Type letters in the console to guess the word.
