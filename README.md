@@ -4,13 +4,15 @@
 A tech-themed Hangman game built in Python for Hack Club! Guess letters to reveal words like "algorithm" or "quantum" before the hangman is complete. Features cool ASCII art, input validation, and a replayable design.
 
 ## Play Online
-
+(Compatible only with MacOS!!!
 - How to play:
   1.Download wordgamehack.zip.
   2.Unpack it.
   3. Type letters in the console to guess the word.
   4. You have 6 attempts to avoid the hangman!
 - Theme: Fun and tech-inspired words.
+
+  
 
 ## Features
 - Techy Word Bank: Guess words like "hacker," "circuit," and "galaxy."
