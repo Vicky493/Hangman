@@ -6,9 +6,10 @@ A tech-themed Hangman game built in Python for Hack Club! Guess letters to revea
 ## Play Online
 
 - How to play:
-  1.Download .
-  2. Type letters in the console to guess the word.
-  3. You have 6 attempts to avoid the hangman!
+  1.Download wordgamehack.zip.
+  2.Unpack it.
+  3. Type letters in the console to guess the word.
+  4. You have 6 attempts to avoid the hangman!
 - Theme: Fun and tech-inspired words.
 
 ## Features
