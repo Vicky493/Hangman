@@ -6,7 +6,7 @@ A tech-themed Hangman game built in Python for Hack Club! Guess letters to revea
 ## Play Online
 
 - How to play:
-  1.Download [index-3.html](https://github.com/Vicky493/Hangman/blob/main/index-3.html).
+  1.Download .
   2. Type letters in the console to guess the word.
   3. You have 6 attempts to avoid the hangman!
 - Theme: Fun and tech-inspired words.
