@@ -1,0 +1,239 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackClub Hangman</title>
+    <link href="./output.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <style>
+        body {
+            background-color: #ec3750;
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        #hangman-art {
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    <h1 class="text-4xl font-bold mb-4">HackClub Hangman</h1>
+    <p class="text-lg mb-4">Theme: HackClub & Tech Terms | Guess the word!</p>
+    <div id="game-container" class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+        <pre id="hangman-art" class="text-center mb-4"></pre>
+        <p id="word-display" class="text-2xl text-center mb-4"></p>
+        <p id="guessed-letters" class="text-center mb-4">Guessed letters: None yet</p>
+        <p id="attempts" class="text-center mb-4">Attempts left: 6</p>
+        <p id="message" class="text-center mb-4"></p>
+        <input id="guess-input" type="text" maxlength="1" placeholder="Enter a letter" class="w-full p-2 mb-4 text-black rounded">
+        <div class="flex justify-center space-x-4">
+            <button id="guess-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guess</button>
+            <button id="quit-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Quit</button>
+            <button id="restart-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded hidden">Play Again</button>
+        </div>
+    </div>
+
+    <script type="text/python" id="game-code">
+import random
+import js
+from pyodide.ffi import create_proxy
+import asyncio
+import platform
+
+# HackClub-themed word bank
+word_bank = [
+    'hackclub', 'sprig', 'arcade', 'coding', 'hacker',
+    'open', 'source', 'github', 'python', 'javascript',
+    'circuit', 'maker', 'project', 'innovation', 'debug',
+    'algorithm', 'pixel', 'console', 'server', 'cloud'
+]
+
+HANGMAN_PICS = [
+    '''
+      +---+
+          |
+          |
+          |
+         ===
+    ''',
+    '''
+      +---+
+      O   |
+          |
+          |
+         ===
+    ''',
+    '''
+      +---+
+      O   |
+      |   |
+          |
+         ===
+    ''',
+    '''
+      +---+
+      O   |
+     /|   |
+          |
+         ===
+    ''',
+    '''
+      +---+
+      O   |
+     /|\\  |
+          |
+         ===
+    ''',
+    '''
+      +---+
+      O   |
+     /|\\  |
+     /    |
+         ===
+    ''',
+    '''
+      +---+
+      O   |
+     /|\\  |
+     / \\  |
+         ===
+    '''
+]
+
+async def play_hangman():
+    word = random.choice(word_bank).lower()
+    guessed_word = ['_'] * len(word)
+    guessed_letters = set()
+    attempts = 6
+
+    js.document.getElementById("attempts").innerText = f"Attempts left: {attempts}"
+    js.document.getElementById("word-display").innerText = ' '.join(guessed_word)
+    js.document.getElementById("guessed-letters").innerText = "Guessed letters: None yet"
+    js.document.getElementById("message").innerText = ""
+    js.document.getElementById("hangman-art").innerText = HANGMAN_PICS[0]
+    js.document.getElementById("guess-btn").disabled = False
+    js.document.getElementById("quit-btn").disabled = False
+    js.document.getElementById("restart-btn").classList.add("hidden")
+    js.document.getElementById("guess-input").disabled = False
+
+    def update_display():
+        js.document.getElementById("hangman-art").innerText = HANGMAN_PICS[6 - attempts]
+        js.document.getElementById("word-display").innerText = ' '.join(guessed_word)
+        js.document.getElementById("guessed-letters").innerText = f"Guessed letters: {', '.join(sorted(guessed_letters)) if guessed_letters else 'None yet'}"
+        js.document.getElementById("attempts").innerText = f"Attempts left: {attempts}"
+
+    def end_game(message):
+        js.document.getElementById("message").innerText = message
+        js.document.getElementById("guess-btn").disabled = True
+        js.document.getElementById("quit-btn").disabled = True
+        js.document.getElementById("restart-btn").classList.remove("hidden")
+        js.document.getElementById("guess-input").disabled = True
+
+    def handle_guess(event):
+        guess = js.document.getElementById("guess-input").value.lower().strip()
+        js.document.getElementById("guess-input").value = ""
+
+        if guess == 'quit':
+            end_game(f"Game quit! The word was: {word}")
+            return
+
+        if len(guess) != 1 or not guess.isalpha():
+            js.document.getElementById("message").innerText = "Invalid input! Please guess a single letter."
+            return
+
+        if guess in guessed_letters:
+            js.document.getElementById("message").innerText = "You already guessed that letter! Try another."
+            return
+
+        guessed_letters.add(guess)
+
+        if guess in word:
+            for i in range(len(word)):
+                if word[i] == guess:
+                    guessed_word[i] = guess
+            js.document.getElementById("message").innerText = "Great guess!"
+        else:
+            nonlocal attempts
+            attempts -= 1
+            js.document.getElementById("message").innerText = f"Wrong guess! Attempts left: {attempts}"
+
+        update_display()
+
+        if '_' not in guessed_word:
+            end_game(f"Congratulations! You guessed the word: {word}")
+            return
+
+        if attempts == 0:
+            js.document.getElementById("hangman-art").innerText = HANGMAN_PICS[6]
+            end_game(f"You've run out of attempts! The word was: {word}")
+            return
+
+    def handle_quit(event):
+        end_game(f"Game quit! The word was: {word}")
+
+    js.document.getElementById("guess-btn").onclick = create_proxy(handle_guess)
+    js.document.getElementById("quit-btn").onclick = create_proxy(handle_quit)
+    js.document.getElementById("restart-btn").onclick = create_proxy(lambda x: asyncio.ensure_future(play_hangman()))
+
+async def main():
+    await play_hangman()
+
+if platform.system() == "Emscripten":
+    asyncio.ensure_future(main())
+else:
+    if __name__ == "__main__":
+        asyncio.run(main())
+    </script>
+
+    <script>
+        async function loadPyodideAndRun() {
+            let pyodide = await loadPyodide();
+            await pyodide.loadPackage("micropip");
+            await pyodide.runPythonAsync(document.getElementById("game-code").text);
+        }
+        loadPyodideAndRun();
+    </script>
+</body>
+</html>
